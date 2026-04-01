@@ -27,7 +27,7 @@ import {
 import ChatBot from '../components/ChatBot'
 import GoalsModal from '../components/GoalsModal'
 import BarcodeScanner from '../components/BarcodeScanner'
-import './dashboard.css'
+import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 

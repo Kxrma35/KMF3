@@ -4,7 +4,7 @@ import { auth } from './firebase'
 import Login from './pages/login'
 import Signup from './pages/signup'
 import Dashboard from './pages/dashboard'
-import Progress from './pages/Progress'
+import Progress from './pages/progress'
 
 function App() {
   const [user, loading] = useAuthState(auth)

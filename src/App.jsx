@@ -12,7 +12,7 @@ function App() {
   if (loading) return <p>Loading...</p>
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/bulking-tracker">
       <Routes>
         <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/progress" element={user ? <Progress /> : <Navigate to="/login" />} />

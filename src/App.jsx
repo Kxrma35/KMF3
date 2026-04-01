@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from './firebase'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
-import Dashboard from './pages/Dashboard'
+import Login from './pages/login'
+import Signup from './pages/signup'
+import Dashboard from './pages/dashboard'
 import Progress from './pages/Progress'
 
 function App() {

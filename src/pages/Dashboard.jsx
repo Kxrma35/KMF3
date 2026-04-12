@@ -168,7 +168,7 @@ export default function Dashboard() {
         {/* Header */}
         <header className="dash-header">
           <div>
-            <p className="dash-greeting">{greeting()} 👋</p>
+            <p className="dash-greeting">{greeting()} </p>
             <h1 className="dash-name">{user.email.split('@')[0]}</h1>
           </div>
           <div className="header-btns">
@@ -239,7 +239,7 @@ export default function Dashboard() {
         <section className="card">
           <h2 className="card-title">Today's Meals</h2>
           {meals.length === 0
-            ? <p className="empty-msg">No meals yet — add your first one above! 🍽️</p>
+            ? <p className="empty-msg">No meals yet — add your first one above! </p>
             : <ul className="meal-list">
                 {meals.map((m, i) => (
                   <li key={m.id} className="meal-item" style={{ animationDelay:`${i*50}ms` }}>
@@ -302,7 +302,7 @@ export default function Dashboard() {
       {/* Bottom Nav */}
       <nav className="bottom-nav">
         <button className="nav-btn active" onClick={() => navigate('/')}>
-          <span className="nav-icon">🏠</span><span className="nav-lbl">Home</span>
+          <span className="nav-icon"></span><span className="nav-lbl">Home</span>
         </button>
         <button className="nav-btn" onClick={() => navigate('/progress')}>
           <ChartBarIcon className="nav-hero-icon"/><span className="nav-lbl">Progress</span>

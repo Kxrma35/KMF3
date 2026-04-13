@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Bulking Tracker</string>
-    <string name="title_activity_main">Bulking Tracker</string>
-    <string name="package_name">com.karma.bulkingtracker</string>
-    <string name="custom_url_scheme">com.karma.bulkingtracker</string>
-</resources>

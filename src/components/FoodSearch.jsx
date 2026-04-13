@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import './FoodSearch.css'
 
-const USDA_API_KEY = 'DEMO_KEY' // Replace with your free key from https://fdc.nal.usda.gov/api-key-signup.html
+const USDA_API_KEY = 'DEMO_KEY' 
 
 function FoodSearch({ onSelect }) {
   const [query, setQuery] = useState('')

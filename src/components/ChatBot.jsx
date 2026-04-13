@@ -41,7 +41,7 @@ Total protein so far: ${totalProtein}g
 Calories remaining: ${calorieGoal - totalCalories} kcal
 
 You have access to web search — use it to find accurate nutritional information about specific foods when needed. Give practical, specific advice with real calorie and protein numbers.`,
-            // ✅ Filter out the initial assistant greeting before sending to API
+           
             messages: updatedMessages
               .filter((m, i) => !(i === 0 && m.role === 'assistant'))
               .map(m => ({ role: m.role, content: m.content }))

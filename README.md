@@ -1,9 +1,9 @@
 
-# Bulking Tracker
+# KIO3
 
 **AI-Powered Calorie & Nutrition Tracking for Serious Bulkers**
 
-Bulking Tracker is a full-stack web application that allows users to track their daily calorie and protein intake, log meals using a live food search database, monitor weight progress over time, and get real-time nutrition advice from an AI chatbot — all from a clean, responsive interface designed specifically for people on a bulking diet.
+KIO3 is a full-stack web application that allows users to track their daily calorie and protein intake, log meals using a live food search database, monitor weight progress over time, and get real-time nutrition advice from an AI chatbot — all from a clean, responsive interface designed specifically for people on a bulking diet.
 
 ---
 
@@ -93,7 +93,7 @@ This project is built primarily around **React**, using a combination of support
 ## Repository
 
 ```
-https://github.com/Kxrma35/bulking-tracker.git
+https://github.com/Kxrma35/KIO3.git
 ```
 
 ---

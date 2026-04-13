@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from './firebase'
 import Login from './pages/Login'
@@ -12,14 +12,14 @@ function App() {
   if (loading) return <p>Loading...</p>
 
   return (
-    <BrowserRouter basename="/bulking-tracker">
+    <HashRouter>
       <Routes>
         <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/progress" element={user ? <Progress /> : <Navigate to="/login" />} />
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
         <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 

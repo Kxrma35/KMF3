@@ -1,4 +1,4 @@
-import { HashRouter as BrowserRouter } from 'react-router-dom'
+import { HashRouter } from 'react-router-dom'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from './firebase'
 import Login from './pages/Login'

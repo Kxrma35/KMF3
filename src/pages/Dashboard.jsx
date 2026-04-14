@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react'
-import { auth, db } from '../firebase'
-import { signOut } from 'firebase/auth'
+import { auth, db, storage } from '../firebase'
 import { collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc } from 'firebase/firestore'
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { Bar } from 'react-chartjs-2'
 import {
   Chart as ChartJS, CategoryScale, LinearScale,
   BarElement, Title, Tooltip, Legend
 } from 'chart.js'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  TrashIcon, ArrowRightOnRectangleIcon, AdjustmentsHorizontalIcon,
-  QrCodeIcon, ChartBarIcon, FireIcon, BoltIcon
+  TrashIcon, AdjustmentsHorizontalIcon,
+  QrCodeIcon, ChartBarIcon, FireIcon, BoltIcon, PencilSquareIcon,
+  HomeIcon, Cog6ToothIcon, RectangleStackIcon, ScaleIcon, ArrowRightIcon,
+  CurrencyDollarIcon, CameraIcon
 } from '@heroicons/react/24/outline'
 import ChatBot from '../components/ChatBot'
 import GoalsModal from '../components/GoalsModal'
 import BarcodeScanner from '../components/BarcodeScanner'
 import FoodSearch from '../components/FoodSearch'
+import MealEditModal from '../components/MealEditModal'
+import TemplatesModal from '../components/TemplatesModal'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
@@ -82,16 +86,25 @@ export default function Dashboard() {
   const [mealName, setMealName]         = useState('')
   const [calories, setCalories]         = useState('')
   const [protein, setProtein]           = useState('')
+  const [cost, setCost]                 = useState('')
+  const [costHint, setCostHint]         = useState('')
+  const [estimatingCost, setEstimatingCost] = useState(false)
   const [weight, setWeight]             = useState('')
+  const [photoFile, setPhotoFile]       = useState(null)
+  const [photoPreview, setPhotoPreview] = useState('')
+  const [loggingWeight, setLoggingWeight] = useState(false)
   const [weeklyData, setWeeklyData]     = useState([])
   const [calorieGoal, setCalorieGoal]   = useState(3500)
   const [proteinGoal, setProteinGoal]   = useState(180)
   const [showGoals, setShowGoals]       = useState(false)
   const [showScanner, setShowScanner]   = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
+  const [editingMeal, setEditingMeal]   = useState(null)
   const [streak, setStreak]             = useState(0)
   const [bestStreak, setBestStreak]     = useState(0)
   const user     = auth.currentUser
   const navigate = useNavigate()
+  const location = useLocation()
   const today    = new Date().toISOString().split('T')[0]
 
   const greeting = () => {
@@ -139,25 +152,93 @@ export default function Dashboard() {
     })
   }, [calorieGoal])
 
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview)
+    }
+  }, [photoPreview])
+
   const addMeal = async () => {
     if (!mealName || !calories) return
     await addDoc(collection(db,'meals'), {
       uid: user.uid, name: mealName, calories: Number(calories),
-      protein: Number(protein)||0, date: today, createdAt: new Date()
+      protein: Number(protein)||0,
+      cost: cost === '' ? 0 : (Number(cost) || 0),
+      date: today, createdAt: new Date()
     })
-    setMealName(''); setCalories(''); setProtein('')
+    setMealName(''); setCalories(''); setProtein(''); setCost('')
+    setCostHint('')
+  }
+
+  const getWeekKey = (dateStr) => {
+    const d = new Date(dateStr)
+    const dayNum = d.getUTCDay() || 7
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+    return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`
+  }
+
+  const estimateCostUberEats = async () => {
+    if (!mealName.trim()) return
+    setEstimatingCost(true)
+    setCostHint('')
+    try {
+      const res = await fetch(`/api/pricing/ubereats/estimate?query=${encodeURIComponent(mealName.trim())}`)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setCostHint(data?.error || 'Could not estimate cost')
+        return
+      }
+      if (typeof data?.estimatedCost === 'number') {
+        setCost(String(Math.round(data.estimatedCost)))
+        setCostHint('Estimated from Uber Eats')
+      } else {
+        setCostHint('No estimate returned')
+      }
+    } catch {
+      setCostHint('Cost estimate failed (server not running)')
+    } finally {
+      setEstimatingCost(false)
+    }
   }
 
   const logWeight = async () => {
-    if (!weight) return
-    await addDoc(collection(db,'weights'), {
-      uid: user.uid, weight: Number(weight), date: today, createdAt: new Date()
-    })
-    setWeight('')
+    if (!weight || loggingWeight) return
+    setLoggingWeight(true)
+    try {
+      let photoUrl = ''
+      let photoPath = ''
+
+      if (photoFile) {
+        const ext = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const path = `progressPhotos/${user.uid}/${today}-${Date.now()}.${ext}`
+        const storageRef = ref(storage, path)
+        await uploadBytes(storageRef, photoFile, { contentType: photoFile.type || 'image/jpeg' })
+        photoUrl = await getDownloadURL(storageRef)
+        photoPath = path
+      }
+
+      await addDoc(collection(db,'weights'), {
+        uid: user.uid,
+        weight: Number(weight),
+        date: today,
+        weekKey: getWeekKey(today),
+        photoUrl,
+        photoPath,
+        createdAt: new Date()
+      })
+      setWeight('')
+      setPhotoFile(null)
+      setPhotoPreview('')
+    } finally {
+      setLoggingWeight(false)
+    }
   }
 
   const totalCalories  = meals.reduce((s, m) => s + m.calories, 0)
   const totalProtein   = meals.reduce((s, m) => s + m.protein, 0)
+  const totalSpend     = meals.reduce((s, m) => s + (Number(m.cost) || 0), 0)
   const calPct         = totalCalories / calorieGoal
   const protPct        = totalProtein  / proteinGoal
 
@@ -174,6 +255,9 @@ export default function Dashboard() {
           <div className="header-btns">
             <button className="icon-pill" onClick={() => setShowGoals(true)}>
               <AdjustmentsHorizontalIcon className="pill-icon"/>
+            </button>
+            <button className="icon-pill" onClick={() => setShowTemplates(true)} title="Meal templates">
+              <RectangleStackIcon className="pill-icon"/>
             </button>
           </div>
         </header>
@@ -229,6 +313,15 @@ export default function Dashboard() {
               <input className="field" placeholder="Protein (g)" type="number"
                 value={protein} onChange={e => setProtein(e.target.value)}/>
             </div>
+            <div className="cost-row">
+              <input className="field" placeholder="Cost (optional)" type="number"
+                value={cost} onChange={e => setCost(e.target.value)}/>
+              <button className="cost-est-btn" onClick={estimateCostUberEats} disabled={estimatingCost}>
+                <CurrencyDollarIcon className="cost-est-ic" />
+                {estimatingCost ? 'Estimating…' : 'Estimate'}
+              </button>
+            </div>
+            {costHint && <p className="cost-hint">{costHint}</p>}
             <button className="add-btn" onClick={addMeal}>
               <BoltIcon className="add-icon"/> Add Meal
             </button>
@@ -237,7 +330,12 @@ export default function Dashboard() {
 
         {/* Meals List */}
         <section className="card">
-          <h2 className="card-title">Today's Meals</h2>
+          <div className="card-head">
+            <h2 className="card-title">Today's Meals</h2>
+            <span className="text-link" style={{ cursor: 'default' }}>
+              Spend: <b>{Math.round(totalSpend)}</b>
+            </span>
+          </div>
           {meals.length === 0
             ? <p className="empty-msg">No meals yet — add your first one above! </p>
             : <ul className="meal-list">
@@ -246,10 +344,15 @@ export default function Dashboard() {
                     <span className="meal-dot"/>
                     <div className="meal-info">
                       <span className="meal-name">{m.name}</span>
-                      <span className="meal-prot">{m.protein}g protein</span>
+                      <span className="meal-prot">
+                        {m.protein}g protein{Number(m.cost) ? ` • cost ${Math.round(m.cost)}` : ''}
+                      </span>
                     </div>
                     <div className="meal-right">
                       <span className="meal-kcal">{m.calories} kcal</span>
+                      <button className="icon-btn" onClick={() => setEditingMeal(m)} title="Edit meal">
+                        <PencilSquareIcon className="icon-btn-i"/>
+                      </button>
                       <button className="del-btn" onClick={() => deleteDoc(doc(db,'meals',m.id))}>
                         <TrashIcon className="del-icon"/>
                       </button>
@@ -266,15 +369,39 @@ export default function Dashboard() {
           <div className="weight-row">
             <input className="field" placeholder="Weight in kg (e.g. 75.5)"
               type="number" value={weight} onChange={e => setWeight(e.target.value)}/>
-            <button className="weight-btn" onClick={logWeight}>Log</button>
+            <button className="weight-btn" onClick={logWeight} disabled={loggingWeight}>
+              {loggingWeight ? 'Saving...' : 'Log'}
+            </button>
           </div>
+          <label className="photo-upload-btn">
+            <CameraIcon className="photo-upload-icon" /> Add weekly photo
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden-file-input"
+              onChange={(e) => {
+                const f = e.target.files?.[0] || null
+                setPhotoFile(f)
+                setPhotoPreview(prev => {
+                  if (prev) URL.revokeObjectURL(prev)
+                  return f ? URL.createObjectURL(f) : ''
+                })
+              }}
+            />
+          </label>
+          {photoPreview && (
+            <img src={photoPreview} alt="Selected progress" className="weight-photo-preview" />
+          )}
+          <p className="weight-photo-hint">Optional: attach one photo weekly to compare physique changes over time.</p>
         </section>
 
         {/* Weekly Chart */}
         <section className="card">
           <div className="card-head">
             <h2 className="card-title">Weekly Calories</h2>
-            <button className="text-link" onClick={() => navigate('/progress')}>View all →</button>
+            <button className="text-link text-link-icon" onClick={() => navigate('/progress')}>
+              View all <ArrowRightIcon className="text-link-ic" />
+            </button>
           </div>
           {weeklyData.length > 0 && (
             <Bar data={{
@@ -301,14 +428,17 @@ export default function Dashboard() {
 
       {/* Bottom Nav */}
       <nav className="bottom-nav">
-        <button className="nav-btn active" onClick={() => navigate('/')}>
-          <span className="nav-icon"></span><span className="nav-lbl">Home</span>
+        <button className={`nav-btn ${location.pathname === '/' ? 'active' : ''}`} onClick={() => navigate('/')}>
+          <HomeIcon className="nav-hero-icon"/><span className="nav-lbl">Home</span>
         </button>
-        <button className="nav-btn" onClick={() => navigate('/progress')}>
-          <ChartBarIcon className="nav-hero-icon"/><span className="nav-lbl">Progress</span>
+        <button className={`nav-btn ${location.pathname === '/insights' ? 'active' : ''}`} onClick={() => navigate('/insights')}>
+          <ChartBarIcon className="nav-hero-icon"/><span className="nav-lbl">Insights</span>
         </button>
-        <button className="nav-btn" onClick={() => signOut(auth)}>
-          <ArrowRightOnRectangleIcon className="nav-hero-icon"/><span className="nav-lbl">Logout</span>
+        <button className={`nav-btn ${location.pathname === '/progress' ? 'active' : ''}`} onClick={() => navigate('/progress')}>
+          <ScaleIcon className="nav-hero-icon"/><span className="nav-lbl">Progress</span>
+        </button>
+        <button className={`nav-btn ${location.pathname === '/settings' ? 'active' : ''}`} onClick={() => navigate('/settings')}>
+          <Cog6ToothIcon className="nav-hero-icon"/><span className="nav-lbl">Settings</span>
         </button>
       </nav>
 
@@ -321,6 +451,12 @@ export default function Dashboard() {
         <BarcodeScanner
           onResult={p => { setMealName(p.name); setCalories(String(p.calories)); setProtein(String(p.protein)); setShowScanner(false) }}
           onClose={() => setShowScanner(false)}/>
+      )}
+      {showTemplates && (
+        <TemplatesModal mealsToday={meals} onClose={() => setShowTemplates(false)}/>
+      )}
+      {editingMeal && (
+        <MealEditModal meal={editingMeal} onClose={() => setEditingMeal(null)}/>
       )}
       <ChatBot totalCalories={totalCalories} totalProtein={totalProtein}
         calorieGoal={calorieGoal} proteinGoal={proteinGoal} meals={meals}/>

@@ -14,13 +14,14 @@ import {
   Filler
 } from 'chart.js'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeftIcon, ScaleIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, ScaleIcon, CameraIcon } from '@heroicons/react/24/outline'
 import './Progress.css'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
 function Progress() {
   const [weights, setWeights] = useState([])
+  const [selectedPhoto, setSelectedPhoto] = useState('')
   const user = auth.currentUser
   const navigate = useNavigate()
 
@@ -41,6 +42,7 @@ function Progress() {
   const latest = weights[weights.length - 1]
   const first = weights[0]
   const change = latest && first ? (latest.weight - first.weight).toFixed(1) : 0
+  const photoEntries = [...weights].filter(w => w.photoUrl).reverse()
 
   return (
     <div className="progress-page">
@@ -122,6 +124,25 @@ function Progress() {
       </div>
 
       <div className="progress-card">
+        <h3 className="section-title">Progress Photos</h3>
+        {photoEntries.length === 0 ? (
+          <p className="empty-text">No photos yet. Add one when logging weight on the dashboard.</p>
+        ) : (
+          <div className="photo-grid">
+            {photoEntries.map((w) => (
+              <button key={`${w.id}-photo`} className="photo-tile" onClick={() => setSelectedPhoto(w.photoUrl)}>
+                <img src={w.photoUrl} alt={`Progress on ${w.date}`} className="photo-thumb" />
+                <div className="photo-meta">
+                  <CameraIcon className="photo-meta-icon" />
+                  <span>{w.date} · {w.weight} kg</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="progress-card">
         <h3 className="section-title">Weight Log</h3>
         {weights.length === 0 ? (
           <p className="empty-text">No weight entries yet. Log your weight from the dashboard.</p>
@@ -129,13 +150,22 @@ function Progress() {
           <div className="weight-log">
             {[...weights].reverse().map(w => (
               <div key={w.id} className="weight-entry">
-                <span className="weight-date">{w.date}</span>
+                <div className="weight-entry-left">
+                  <span className="weight-date">{w.date}</span>
+                  {w.photoUrl && <span className="weight-photo-tag">Photo</span>}
+                </div>
                 <span className="weight-value">{w.weight} kg</span>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {selectedPhoto && (
+        <div className="photo-lightbox" onClick={() => setSelectedPhoto('')}>
+          <img src={selectedPhoto} alt="Progress full size" className="photo-lightbox-image" />
+        </div>
+      )}
 
     </div>
   )

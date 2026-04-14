@@ -1,3 +1,5 @@
+@import './Dashboard.CSS';
+
 /* ── Shell ───────────────────────────────────── */
 .app-shell {
   display: flex;
@@ -186,6 +188,17 @@
   cursor: pointer; padding: 0;
 }
 
+.text-link-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.text-link-ic {
+  width: 16px;
+  height: 16px;
+}
+
 .scan-pill {
   display: flex; align-items: center; gap: 0.3rem;
   background: var(--purple-light);
@@ -209,6 +222,43 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.65rem;
+}
+
+.cost-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.cost-est-btn {
+  height: 100%;
+  padding: 0 0.9rem;
+  border-radius: var(--radius-xs);
+  background: var(--purple-light);
+  color: var(--purple);
+  font-weight: 900;
+  font-family: var(--font-display);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.cost-est-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cost-est-ic {
+  width: 16px;
+  height: 16px;
+}
+
+.cost-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: -0.25rem;
 }
 
 .field {
@@ -277,6 +327,21 @@
 .del-btn:hover { background: #FFF0F0; }
 .del-icon { width: 13px; height: 13px; color: var(--danger); }
 
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-card);
+  transition: background 0.15s;
+}
+
+.icon-btn:hover { background: var(--purple-light); }
+.icon-btn-i { width: 14px; height: 14px; color: var(--purple); }
+
 .empty-msg {
   font-size: 0.875rem; color: var(--text-muted);
   text-align: center; padding: 1rem 0;
@@ -295,6 +360,44 @@
   transition: background 0.15s;
 }
 .weight-btn:hover { background: #d0f7e4; }
+.weight-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.photo-upload-btn {
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--purple-light);
+  color: var(--purple);
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.photo-upload-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.weight-photo-preview {
+  margin-top: 0.65rem;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+}
+
+.weight-photo-hint {
+  margin-top: 0.45rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
 
 /* ── Bottom Nav ─────────────────────────────── */
 .bottom-nav {
@@ -316,7 +419,6 @@
 .nav-btn:hover { color: var(--purple); }
 .nav-btn.active { color: var(--purple); }
 
-.nav-icon { font-size: 1.2rem; }
 .nav-hero-icon { width: 22px; height: 22px; }
 .nav-lbl { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; font-family: var(--font-display); }
 

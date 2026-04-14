@@ -6,6 +6,7 @@
   "homepage": "https://github.com/Kxrma35/KIO3.git",
   "scripts": {
     "dev": "vite",
+    "server": "node server/index.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -19,6 +20,9 @@
     "@heroicons/react": "^2.2.0",
     "@zxing/library": "^0.21.3",
     "chart.js": "^4.5.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
     "firebase": "^12.11.0",
     "react": "^19.2.4",
     "react-chartjs-2": "^5.3.1",

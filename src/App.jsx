@@ -5,6 +5,8 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
 import Progress from './pages/Progress'
+import Insights from './pages/Insights'
+import Settings from './pages/Settings'
 
 function App() {
   const [user, loading] = useAuthState(auth)
@@ -14,7 +16,9 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+      <Route path="/insights" element={user ? <Insights /> : <Navigate to="/login" />} />
       <Route path="/progress" element={user ? <Progress /> : <Navigate to="/login" />} />
+      <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
       <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
       <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" />} />
     </Routes>

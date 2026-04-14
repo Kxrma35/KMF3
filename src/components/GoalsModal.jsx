@@ -10,14 +10,31 @@ function GoalsModal({ currentCalories, currentProtein, onSave, onClose }) {
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
+    const nextCalories = Number(calories)
+    const nextProtein = Number(protein)
+    if (!nextCalories || !nextProtein) return
+
     setSaving(true)
-    await setDoc(doc(db, 'goals', auth.currentUser.uid), {
-      calories: Number(calories),
-      protein: Number(protein)
-    })
-    onSave(Number(calories), Number(protein))
-    setSaving(false)
+
+    // Optimistic update for instant UX.
+    onSave(nextCalories, nextProtein)
+    localStorage.setItem(`kio3-goals-${auth.currentUser.uid}`, JSON.stringify({
+      calories: nextCalories,
+      protein: nextProtein,
+      updatedAt: Date.now()
+    }))
     onClose()
+    try {
+      await setDoc(doc(db, 'goals', auth.currentUser.uid), {
+        calories: nextCalories,
+        protein: nextProtein,
+        updatedAt: new Date()
+      }, { merge: true })
+    } catch {
+      // Local values are already applied; Firestore will retry once online in most cases.
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (

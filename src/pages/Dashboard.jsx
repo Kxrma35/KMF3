@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { auth, db, storage } from '../firebase'
-import { collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc } from 'firebase/firestore'
+import { collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, getDocFromCache } from 'firebase/firestore'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { Bar } from 'react-chartjs-2'
 import {
@@ -113,10 +113,61 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    getDoc(doc(db, 'goals', user.uid)).then(s => {
-      if (s.exists()) { setCalorieGoal(s.data().calories); setProteinGoal(s.data().protein) }
-    })
-  }, [])
+    let alive = true
+    const key = `kio3-goals-${user.uid}`
+    const ref = doc(db, 'goals', user.uid)
+
+    // Instant local read to avoid waiting on network.
+    const localRaw = localStorage.getItem(key)
+    if (localRaw) {
+      try {
+        const local = JSON.parse(localRaw)
+        if (alive) {
+          if (local?.calories) setCalorieGoal(Number(local.calories))
+          if (local?.protein) setProteinGoal(Number(local.protein))
+        }
+      } catch {
+        // Ignore malformed local cache.
+      }
+    }
+
+    ;(async () => {
+      try {
+        // Firestore cache is usually faster than network.
+        const cached = await getDocFromCache(ref)
+        if (alive && cached.exists()) {
+          const d = cached.data()
+          if (d?.calories) setCalorieGoal(Number(d.calories))
+          if (d?.protein) setProteinGoal(Number(d.protein))
+          localStorage.setItem(key, JSON.stringify({
+            calories: Number(d.calories) || 3500,
+            protein: Number(d.protein) || 180,
+            updatedAt: Date.now()
+          }))
+        }
+      } catch {
+        // Cache may be empty on first load.
+      }
+
+      try {
+        const snap = await getDoc(ref)
+        if (alive && snap.exists()) {
+          const d = snap.data()
+          if (d?.calories) setCalorieGoal(Number(d.calories))
+          if (d?.protein) setProteinGoal(Number(d.protein))
+          localStorage.setItem(key, JSON.stringify({
+            calories: Number(d.calories) || 3500,
+            protein: Number(d.protein) || 180,
+            updatedAt: Date.now()
+          }))
+        }
+      } catch {
+        // Keep local goals when offline/slow.
+      }
+    })()
+
+    return () => { alive = false }
+  }, [user.uid])
 
   useEffect(() => {
     const q = query(collection(db, 'meals'), where('uid','==',user.uid), where('date','==',today))
